@@ -46,7 +46,7 @@
 
 			var container, stats;
 
-			var blendMesh, helper, camera, scene, renderer, controls;
+			var blendMesh, helper, camera, scene, renderer, controls, wireframeHelper;
 
 			var clock = new THREE.Clock();
 			var gui = null;
@@ -90,6 +90,7 @@
 				window.addEventListener( 'warp', onWarp );
 				window.addEventListener( 'toggle-show-skeleton', onShowSkeleton );
 				window.addEventListener( 'toggle-show-model', onShowModel );
+				window.addEventListener( 'toggle-show-wireframe', onShowWireframe );
 
 				blendMesh = new THREE.BlendCharacter();
 				blendMesh.load( "models/skinned/marine/marine_anims_core.json", start );
@@ -192,10 +193,21 @@
 
 			}
 
+			function onShowWireframe( event ) {
+
+				var shouldShow = event.detail.shouldShow;
+				wireframeHelper.visible = shouldShow;
+
+			}
+
 			function start() {
 
 				blendMesh.rotation.y = Math.PI * -135 / 180;
 				scene.add( blendMesh );
+
+				wireframeHelper = new THREE.WireframeHelper( blendMesh );
+				wireframeHelper.visible = false;
+				scene.add( wireframeHelper );
 
 				var aspect = window.innerWidth / window.innerHeight;
 				var radius = blendMesh.geometry.boundingSphere.radius;

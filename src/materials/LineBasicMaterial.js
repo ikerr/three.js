@@ -11,7 +11,8 @@ import { Color } from '../math/Color';
  *
  *  linewidth: <float>,
  *  linecap: "round",
- *  linejoin: "round"
+ *  linejoin: "round",
+ *  skinning: <bool>
  * }
  */
 
@@ -28,6 +29,8 @@ function LineBasicMaterial( parameters ) {
 	this.linejoin = 'round';
 
 	this.lights = false;
+
+	this.skinning = false;
 
 	this.setValues( parameters );
 
@@ -47,6 +50,7 @@ LineBasicMaterial.prototype.copy = function ( source ) {
 	this.linewidth = source.linewidth;
 	this.linecap = source.linecap;
 	this.linejoin = source.linejoin;
+	this.skinning = source.skinning;
 
 	return this;
 

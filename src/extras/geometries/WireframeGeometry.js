@@ -1,5 +1,5 @@
 import { BufferGeometry } from '../../core/BufferGeometry';
-import { BufferAttribute } from '../../core/BufferAttribute';
+import { Float32Attribute, Uint32Attribute } from '../../core/BufferAttribute';
 
 /**
  * @author mrdoob / http://mrdoob.com/
@@ -19,7 +19,7 @@ function WireframeGeometry( geometry ) {
 
 	var keys = [ 'a', 'b', 'c' ];
 
-	if ( (geometry && geometry.isGeometry) ) {
+	if ( geometry && geometry.isGeometry ) {
 
 		var vertices = geometry.vertices;
 		var faces = geometry.faces;
@@ -53,26 +53,27 @@ function WireframeGeometry( geometry ) {
 
 		}
 
-		var coords = new Float32Array( numEdges * 2 * 3 );
 
-		for ( var i = 0, l = numEdges; i < l; i ++ ) {
+		var positionArray = new Float32Array( geometry.vertices.length * 3 );
+		this.addAttribute( 'position', new Float32Attribute( positionArray, 3 ).copyVector3sArray( geometry.vertices ) );
 
-			for ( var j = 0; j < 2; j ++ ) {
+		if ( geometry.skinIndices ) {
 
-				var vertex = vertices[ edges [ 2 * i + j ] ];
-
-				var index = 6 * i + 3 * j;
-				coords[ index + 0 ] = vertex.x;
-				coords[ index + 1 ] = vertex.y;
-				coords[ index + 2 ] = vertex.z;
-
-			}
+			var skinIndexArray = new Float32Array( geometry.skinIndices.length * 4 );
+			this.addAttribute( 'skinIndex', new Float32Attribute( skinIndexArray, 4 ).copyVector4sArray( geometry.skinIndices ) );
 
 		}
 
-		this.addAttribute( 'position', new BufferAttribute( coords, 3 ) );
+		if ( geometry.skinWeights ) {
 
-	} else if ( (geometry && geometry.isBufferGeometry) ) {
+			var skinWeightArray = new Float32Array( geometry.skinWeights.length * 4 );
+			this.addAttribute( 'skinWeight', new Float32Attribute( skinWeightArray, 4 ).copyVector4sArray( geometry.skinWeights ) );
+
+		}
+
+		this.setIndex( new Uint32Attribute( edges.slice( 0, 2 * numEdges ), 1 ) );
+
+	} else if ( geometry && geometry.isBufferGeometry ) {
 
 		if ( geometry.index !== null ) {
 
@@ -124,24 +125,7 @@ function WireframeGeometry( geometry ) {
 
 			}
 
-			var coords = new Float32Array( numEdges * 2 * 3 );
-
-			for ( var i = 0, l = numEdges; i < l; i ++ ) {
-
-				for ( var j = 0; j < 2; j ++ ) {
-
-					var index = 6 * i + 3 * j;
-					var index2 = edges[ 2 * i + j ];
-
-					coords[ index + 0 ] = vertices.getX( index2 );
-					coords[ index + 1 ] = vertices.getY( index2 );
-					coords[ index + 2 ] = vertices.getZ( index2 );
-
-				}
-
-			}
-
-			this.addAttribute( 'position', new BufferAttribute( coords, 3 ) );
+			this.setIndex( new Uint32Attribute( edges.slice( 0, 2 * numEdges ), 1 ) );
 
 		} else {
 
@@ -151,29 +135,38 @@ function WireframeGeometry( geometry ) {
 			var numEdges = vertices.length / 3;
 			var numTris = numEdges / 3;
 
-			var coords = new Float32Array( numEdges * 2 * 3 );
+			var edges = new Uint32Array( numEdges * 2 );
 
 			for ( var i = 0, l = numTris; i < l; i ++ ) {
 
 				for ( var j = 0; j < 3; j ++ ) {
 
-					var index = 18 * i + 6 * j;
-
-					var index1 = 9 * i + 3 * j;
-					coords[ index + 0 ] = vertices[ index1 ];
-					coords[ index + 1 ] = vertices[ index1 + 1 ];
-					coords[ index + 2 ] = vertices[ index1 + 2 ];
-
-					var index2 = 9 * i + 3 * ( ( j + 1 ) % 3 );
-					coords[ index + 3 ] = vertices[ index2 ];
-					coords[ index + 4 ] = vertices[ index2 + 1 ];
-					coords[ index + 5 ] = vertices[ index2 + 2 ];
+					var index = 6 * i + 2 * j;
+					var index1 = 3 * i + j;
+					var index2 = 3 * i + ( ( j + 1 ) % 3 );
+					edges[ index ] = index1;
+					edges[ index + 1 ] = index2;
 
 				}
 
 			}
 
-			this.addAttribute( 'position', new BufferAttribute( coords, 3 ) );
+			this.setIndex( new Uint32Attribute( edges, 1 ) );
+
+		}
+
+		var attributes = [ 'position', 'skinIndex', 'skinWeight' ];
+
+		for ( var a = 0, al = attributes.length; a < al; a ++ ) {
+
+			var attributeName = attributes[ a ];
+			var attribute = geometry.getAttribute( attributeName );
+
+			if ( attribute ) {
+
+				this.addAttribute( attributeName, attribute.clone() );
+
+			}
 
 		}
 
