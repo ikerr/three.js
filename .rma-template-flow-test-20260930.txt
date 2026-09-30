@@ -1,0 +1,1 @@
+RMA issue-fixer and PR-reviewer template MCP test.
